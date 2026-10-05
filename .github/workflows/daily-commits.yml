@@ -2,7 +2,7 @@ name: Daily commits
 
 on:
   schedule:
-    - cron: "17 9 * * *" # every day at 09:17 UTC
+    - cron: "17 7 * * *" # every day at 07:17 UTC, then waits a random delay
   workflow_dispatch: # allow manual runs from the Actions tab
 
 permissions:
@@ -11,17 +11,26 @@ permissions:
 jobs:
   commit:
     runs-on: ubuntu-latest
+    timeout-minutes: 300
     steps:
+      - name: Random delay (0-4 hours) on scheduled runs
+        if: github.event_name == 'schedule'
+        run: sleep $(( RANDOM % 14400 ))
+
       - uses: actions/checkout@v4
 
-      - name: Make two commits
+      - name: Make 1-4 commits
         run: |
           git config user.name "abood-alaa"
           git config user.email "135066205+abood-alaa@users.noreply.github.com"
           mkdir -p log
-          for n in 1 2; do
+          count=$(( RANDOM % 4 + 1 ))
+          echo "Making $count commit(s)"
+          for n in $(seq 1 $count); do
             echo "$(date -u +'%Y-%m-%d %H:%M:%S') entry $n" >> log/daily.md
             git add log/daily.md
             git commit -m "Daily log $(date -u +%F) #$n"
+            sleep $(( RANDOM % 60 + 5 ))
           done
+          git pull --rebase
           git push
