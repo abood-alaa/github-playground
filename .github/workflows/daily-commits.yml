@@ -1,0 +1,27 @@
+name: Daily commits
+
+on:
+  schedule:
+    - cron: "17 9 * * *" # every day at 09:17 UTC
+  workflow_dispatch: # allow manual runs from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Make two commits
+        run: |
+          git config user.name "abood-alaa"
+          git config user.email "135066205+abood-alaa@users.noreply.github.com"
+          mkdir -p log
+          for n in 1 2; do
+            echo "$(date -u +'%Y-%m-%d %H:%M:%S') entry $n" >> log/daily.md
+            git add log/daily.md
+            git commit -m "Daily log $(date -u +%F) #$n"
+          done
+          git push
